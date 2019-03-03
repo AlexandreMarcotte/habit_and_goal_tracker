@@ -6,6 +6,11 @@ import pyqtgraph as pg
 import sys
 # -- My Packages --
 from read_from_file import read_from_file
+from inner_dock import InnerDock
+from pyqtgraph.dockarea import DockArea
+from create_cmap import create_cmap
+from app.pyqt_frequently_used import create_new_data_txt_box
+
 
 class MainWin(QMainWindow):
     def __init__(self):
@@ -25,7 +30,12 @@ class MainWin(QMainWindow):
 class SleepPlotterWidget(QWidget):
     def __init__(self):
         super().__init__()
-        self.layout, self.plot = self.init_layout_and_plot()
+        self.layout = self.init_layout()
+        self.dock_area = self.create_dock_area()
+        self.plot = self.init_plot()
+
+        self.add_info_to_layout()
+        # Add info
         self.init_data_from_file()
         self.plot_n_sleep_hours()
 
@@ -40,30 +50,44 @@ class SleepPlotterWidget(QWidget):
         self.sleepines_scale = sleep_data[:, 4] + 6
         self.time_go_to_bed = self.time_wake_up - self.time_sleep
 
-    def init_layout_and_plot(self):
-        l = self.init_layout()
-        p = self.init_plot(l)
-        self.add_info_to_layout(l)
-        # Add info
-        return l, p
-
     def init_layout(self):
         l = QGridLayout(self)
         pg.setConfigOption('background', 'w')
         pg.setConfigOptions(antialias=True)
         return l
 
-    def init_plot(self, l):
+    def create_dock_area(self):
+        dock_area = DockArea()
+        self.layout.addWidget(dock_area, 1, 0, 1, 6)
+        return dock_area
+
+    def init_plot(self):
         p = pg.PlotWidget()
         p.showGrid(x=True, y=True, alpha=0.5)
         p.setYRange(4, 14)
-        l.addWidget(p)
+        plot_dock = InnerDock(
+                self.layout, 'plot', b_pos=(0, 1), toggle_button=True)
+        plot_dock.layout.addWidget(p)
+        self.dock_area.addDock(plot_dock.dock)
         return p
 
-    def add_info_to_layout(self, l):
-        # button
-        b = QPushButton('add info')
-        l.addWidget(b)
+    def add_info_to_layout(self):
+        # create a Inner dock for the adding of new information for the day
+        settings_d = InnerDock(
+                self.layout, 'add info', b_pos=(0, 0), toggle_button=True,
+                size=(1, 1))
+
+        create_new_data_txt_box(settings_d.layout, 'Time wake up', pos=(0, 0))
+        create_new_data_txt_box(settings_d.layout, 'Nb h sleep', pos=(2, 0))
+        create_new_data_txt_box(settings_d.layout, 'Wake up w alarm', pos=(4, 0))
+        create_new_data_txt_box(settings_d.layout, 'n h working', pos=(6, 0))
+        create_new_data_txt_box(settings_d.layout, 'Sleepiness', pos=(8, 0))
+        create_new_data_txt_box(settings_d.layout, 'Gym', pos=(10, 0))
+
+        add_info_b = QPushButton('add info to csv')
+        settings_d.layout.addWidget(add_info_b, 12, 0)
+
+        self.dock_area.addDock(settings_d.dock, position='left')
 
     def plot_n_sleep_hours(self):
         # Plot
@@ -75,21 +99,12 @@ class SleepPlotterWidget(QWidget):
         # Info
         self.print_sleep_info()
 
-    def create_cmap(self, z):
-        cmap = plt.get_cmap('seismic')
-        min_z = np.min(z)
-        max_z = np.max(z)
-        cmap = cmap((z - min_z)/(max_z - min_z))
-        cmap[:, 3] = 0.8
-        cmap *= 255
-        return cmap
-
     def plot_n_working_h(self):
         self.plot.plot(
                 self.t, self.working_hours, label='Working hours', pen='g')
 
     def plot_info(self, info_to_plot, pen_color):
-        cmap = self.create_cmap(self.sleepines_scale)
+        cmap = create_cmap(self.sleepines_scale)
         sleepiness_color = [pg.mkBrush(color) for color in cmap]
         self.plot.plot(
                 self.t, info_to_plot, symbol='o', symbolSize=8,
@@ -97,17 +112,16 @@ class SleepPlotterWidget(QWidget):
                 pen=pen_color)
 
     def plot_w_or_wo_alarm(self):
-        r = (255, 0, 0, 30)
-        g = (0, 255, 0, 30)
-        y = (229, 223, 0, 60)
-        k = (0, 0, 0, 20)
+        r = (255, 0, 0, 20)
+        g = (0, 255, 0, 20)
+        y = (229, 223, 0, 50)
+        k = (0, 0, 0, 10)
         color = [g, y, r, k]
         self.w_or_wo_alarm[self.w_or_wo_alarm == -1] = 3
         for i, val in enumerate(self.w_or_wo_alarm):
             pen = pg.mkPen(color[int(val)], width=6)
             v_line = pg.InfiniteLine(i, pen=pen)
             self.plot.addItem(v_line)
-
 
     def print_sleep_info(self):
         # print('last 7 days work', self.working_hours[-8:-1])
