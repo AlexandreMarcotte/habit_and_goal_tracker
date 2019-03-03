@@ -4,8 +4,8 @@ import numpy as np
 from PyQt5.QtWidgets import *
 import pyqtgraph as pg
 import sys
-import draw_rectangle
-
+# -- My Packages --
+from read_from_file import read_from_file
 
 class MainWin(QMainWindow):
     def __init__(self):
@@ -33,23 +33,37 @@ class SleepPlotterWidget(QWidget):
         path = '/home/alex/Documents/improve_myself/sleeping_progression/sleep.csv'
         sleep_data = read_from_file(path)
         self.time_wake_up = sleep_data[:, 0]
-        self.t = np.linspace(0, len(self.time_wake_up), len(self.time_wake_up))
+        self.t = np.arange(len(self.time_wake_up))
         self.time_sleep = sleep_data[:, 1]
         self.w_or_wo_alarm = sleep_data[:, 2]
         self.working_hours = sleep_data[:, 3]
         self.sleepines_scale = sleep_data[:, 4] + 6
         self.time_go_to_bed = self.time_wake_up - self.time_sleep
 
-
     def init_layout_and_plot(self):
-        layout = QGridLayout(self)
+        l = self.init_layout()
+        p = self.init_plot(l)
+        self.add_info_to_layout(l)
+        # Add info
+        return l, p
+
+    def init_layout(self):
+        l = QGridLayout(self)
         pg.setConfigOption('background', 'w')
         pg.setConfigOptions(antialias=True)
-        plot = pg.PlotWidget()
-        plot.showGrid(x=True, y=True, alpha=0.5)
-        plot.setYRange(4, 14)
-        layout.addWidget(plot)
-        return layout, plot
+        return l
+
+    def init_plot(self, l):
+        p = pg.PlotWidget()
+        p.showGrid(x=True, y=True, alpha=0.5)
+        p.setYRange(4, 14)
+        l.addWidget(p)
+        return p
+
+    def add_info_to_layout(self, l):
+        # button
+        b = QPushButton('add info')
+        l.addWidget(b)
 
     def plot_n_sleep_hours(self):
         # Plot
@@ -60,18 +74,6 @@ class SleepPlotterWidget(QWidget):
         self.plot_w_or_wo_alarm()
         # Info
         self.print_sleep_info()
-        # Plot info
-        # self.set_plot_info()
-        plt.show()
-
-    def set_plot_info(self):
-        plt.title('Sleep patern over time')
-        plt.minorticks_on()
-        plt.xlabel('(n) days after removing internet at home')
-        plt.ylabel('hours')
-        plt.grid(which='both')
-        plt.ylim(4, 14)
-        # plt.legend()
 
     def create_cmap(self, z):
         cmap = plt.get_cmap('seismic')
@@ -84,50 +86,28 @@ class SleepPlotterWidget(QWidget):
 
     def plot_n_working_h(self):
         self.plot.plot(
-                self.t, self.working_hours, label='Working hours',
-                pen='g')
+                self.t, self.working_hours, label='Working hours', pen='g')
 
-    def plot_info(self, info_to_plot, pen_color, sleepiness=True):
+    def plot_info(self, info_to_plot, pen_color):
         cmap = self.create_cmap(self.sleepines_scale)
         sleepiness_color = [pg.mkBrush(color) for color in cmap]
         self.plot.plot(
-                self.t, info_to_plot, symbol='o', symbolSize=7,
+                self.t, info_to_plot, symbol='o', symbolSize=8,
                 symbolBrush=sleepiness_color, label='Time wake up',
                 pen=pen_color)
 
     def plot_w_or_wo_alarm(self):
-        r = (255, 0, 0, 50)
-        g = (0, 255, 0, 50)
-        y = (249, 243, 0, 50)
+        r = (255, 0, 0, 30)
+        g = (0, 255, 0, 30)
+        y = (229, 223, 0, 60)
         k = (0, 0, 0, 20)
-        color = [r, y, g, k]
+        color = [g, y, r, k]
         self.w_or_wo_alarm[self.w_or_wo_alarm == -1] = 3
-        colors = np.array([color[int(d)] for d in self.w_or_wo_alarm])
+        for i, val in enumerate(self.w_or_wo_alarm):
+            pen = pg.mkPen(color[int(val)], width=6)
+            v_line = pg.InfiniteLine(i, pen=pen)
+            self.plot.addItem(v_line)
 
-        n = 10
-        spi = pg.ScatterPlotItem(
-                size=100, pen=pg.mkPen(None), brush=pg.mkBrush(0, 255, 255, 120))
-        # pos = np.random.normal(size=(2,n), scale=100)
-        x = np.linspace(0, 100, n)
-        y = np.zeros(n)
-        pos = np.vstack((x, y))
-        # pos = list(zip(x, y))
-
-        spots = [{'pos': pos[:,i], 'data': 1, 'brush':pg.intColor(10),
-                  'symbol': 1, 'size': 10.} for i in range(n)]
-
-
-        # spots = [{'pos': pos[:,i], 'data': 1} for i in range(n)] + [{'pos': [0,0], 'data': 1}]
-        spi.addPoints(spots)
-        self.plot.addItem(spi)
-
-
-        # squares = draw_rectangle.SquareItem(
-        #         x=self.t.round(), y=np.zeros(len(self.t)),
-        #         w=np.ones(len(self.t)), h=np.ones(len(self.t))*10)
-        # self.plot.addItem(squares)
-            # square = draw_rectangle.SquareItem(x=int(t), y=0, w=1, h=10, color=r)
-            # self.plot.addItem(square)
 
     def print_sleep_info(self):
         # print('last 7 days work', self.working_hours[-8:-1])
@@ -143,13 +123,6 @@ class SleepPlotterWidget(QWidget):
         print('Average sleeping time (over the last 40 days): ', avg_time_sleep)
         print('n days', len(non_zero_time_sleep))
         plt.axhline(avg_time_sleep, c='orange')
-
-
-def read_from_file(file_name):
-    sleep_data = np.loadtxt(file_name, delimiter=',')
-    return sleep_data
-
-
 
 
 def main():
