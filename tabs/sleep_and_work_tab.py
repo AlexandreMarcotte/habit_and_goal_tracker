@@ -12,17 +12,6 @@ from general_function.create_cmap import create_cmap
 from app.pyqt_frequently_used import create_new_data_txt_box
 
 
-# class SleepAndWorkTab(QWidget):
-#     def __init__(self):
-#         super().__init__()
-#         self.pg_layout = self.create_tab()
-#
-#     def create_tab(self):
-#         layout = QHBoxLayout(self)
-#         pg_layout = pg.LayoutWidget()
-#         layout.addWidget(pg_layout)
-#         self.setLayout(layout)
-#         return pg_layout
 
 class SleepAndWorkTab(QWidget):
     def __init__(self):
@@ -50,7 +39,7 @@ class SleepAndWorkTab(QWidget):
         pg.setConfigOptions(antialias=True)
 
     def init_data_from_file(self):
-        path = '/home/alex/Documents/improve_myself/sleeping_progression/sleep.csv'
+        path = '/home/alex/Documents/improve_myself/sleeping_progression/sleep_without_date.csv'
         sleep_data = read_from_file(path)
         self.time_wake_up = sleep_data[:, 0]
         self.t = np.arange(len(self.time_wake_up))
@@ -136,8 +125,8 @@ class SleepAndWorkTab(QWidget):
         # plt.axhline(median_time_wake_up, c='blue')
         # Average time spent sleeping
         non_zero_time_sleep = self.time_sleep[np.nonzero(self.time_sleep)]
-        avg_time_sleep = np.average(non_zero_time_sleep[-50:])
-        print('sleep last 40 days', non_zero_time_sleep[-50:])
+        avg_time_sleep = np.average(non_zero_time_sleep[-40:])
+        print('sleep last 40 days', non_zero_time_sleep[-40:])
         print('Average sleeping time (over the last 40 days): ', avg_time_sleep)
         print('n days', len(non_zero_time_sleep))
         plt.axhline(avg_time_sleep, c='orange')

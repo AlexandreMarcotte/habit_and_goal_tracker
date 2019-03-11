@@ -12,7 +12,7 @@ class MainWin(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.setWindowTitle('- GUI improve your habits -')
+        self.setWindowTitle('- GUI Set goal and create habits')
 
     def initUI(self):
         self.tab_w = TabWidget(self)
