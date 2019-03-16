@@ -3,14 +3,15 @@ import numpy as np
 # GUI
 from PyQt5.QtWidgets import *
 import pyqtgraph as pg
-import sys
+# import sys
+from datetime import datetime as dt
 # -- My Packages --
-from general_function.read_from_file import read_from_file
 from general_function.inner_dock import InnerDock
 from pyqtgraph.dockarea import DockArea
 from general_function.create_cmap import create_cmap
 from app.pyqt_frequently_used import create_new_data_txt_box
-
+from data import Data
+from date_axis import DateAxis
 
 
 class SleepAndWorkTab(QWidget):
@@ -18,14 +19,20 @@ class SleepAndWorkTab(QWidget):
         super().__init__()
         self.layout = self.create_tab()
 
+        self.tracked_categories = [
+            'Time wake up', 'Nb h sleep', 'Wake up w alarm',
+            'n h working', 'Sleepiness', 'Gym',]
+
         self.set_pg_configuration()
         self.dock_area = self.create_dock_area()
-        self.plot = self.init_plot()
+        self.pw = self.init_plot()
 
         self.add_info_to_layout()
-        # Add info
-        self.init_data_from_file()
+        # self.init_data_from_file()
+        self.data = Data()
+        self.data.print_data()
         self.plot_n_sleep_hours()
+        self.plot_n_working_h()
 
     def create_tab(self):
         layout = QHBoxLayout(self)
@@ -38,23 +45,17 @@ class SleepAndWorkTab(QWidget):
         pg.setConfigOption('background', 'w')
         pg.setConfigOptions(antialias=True)
 
-    def init_data_from_file(self):
-        path = '/home/alex/Documents/improve_myself/sleeping_progression/sleep_without_date.csv'
-        sleep_data = read_from_file(path)
-        self.time_wake_up = sleep_data[:, 0]
-        self.t = np.arange(len(self.time_wake_up))
-        self.time_sleep = sleep_data[:, 1]
-        self.w_or_wo_alarm = sleep_data[:, 2]
-        self.working_hours = sleep_data[:, 3]
-        self.sleepines_scale = sleep_data[:, 4] + 6
-        self.time_go_to_bed = self.time_wake_up - self.time_sleep
-
     def create_dock_area(self):
         dock_area = DockArea()
         self.layout.addWidget(dock_area, 1, 0, 1, 6)
         return dock_area
 
     def init_plot(self):
+        # date_axis = DateAxis(orientation='bottom')
+        # vb = pg.ViewBox()
+        # p = pg.PlotWidget(
+        #         viewBox=vb, axisItems={'bottom': date_axis},
+        #         enableMenu=False, title='Plot')
         p = pg.PlotWidget()
         p.showGrid(x=True, y=True, alpha=0.5)
         p.setYRange(4, 14)
@@ -70,12 +71,8 @@ class SleepAndWorkTab(QWidget):
                 self.layout, 'add info', b_pos=(0, 0), toggle_button=True,
                 size=(1, 1))
 
-        create_new_data_txt_box(settings_d.layout, 'Time wake up', pos=(0, 0))  # TODO: ALEXM Mettre le survey a la place de le faire moi meme?
-        create_new_data_txt_box(settings_d.layout, 'Nb h sleep', pos=(2, 0))
-        create_new_data_txt_box(settings_d.layout, 'Wake up w alarm', pos=(4, 0))
-        create_new_data_txt_box(settings_d.layout, 'n h working', pos=(6, 0))
-        create_new_data_txt_box(settings_d.layout, 'Sleepiness', pos=(8, 0))
-        create_new_data_txt_box(settings_d.layout, 'Gym', pos=(10, 0))
+        for i, category in enumerate(self.tracked_categories):
+            create_new_data_txt_box(settings_d.layout, category, pos=(i*2, 0))  # TODO: ALEXM Mettre le survey a la place de le faire moi meme?
 
         add_info_b = QPushButton('add info to csv')
         settings_d.layout.addWidget(add_info_b, 12, 0)
@@ -84,49 +81,34 @@ class SleepAndWorkTab(QWidget):
 
     def plot_n_sleep_hours(self):
         # Plot
-        self.plot_info(self.time_wake_up, pen_color='b')
-        self.plot_info(self.time_sleep, pen_color=(255, 165, 0))
-        # self.plot_time_sleep(sleepiness=True)
-        self.plot_n_working_h()
+        self.plot_info(self.data.time_wake_up, pen_color='b')
+        self.plot_info(self.data.time_sleep, pen_color=(255, 165, 0))
         self.plot_w_or_wo_alarm()
-        # Info
-        self.print_sleep_info()
 
     def plot_n_working_h(self):
-        self.plot.plot(
-                self.t, self.working_hours, label='Working hours', pen='g')
+        self.pw.plot(
+                x=self.data.t, y=self.data.working_hours, label='Working hours', pen='g')
+        # dates = [dt(2018, 1, 5), dt(2018, 3, 6)]  # Date is given by the number of second after 1970
+        # y = [1, 6]
+        # self.pw.plot(x=dates, y=y)
 
     def plot_info(self, info_to_plot, pen_color):
-        cmap = create_cmap(self.sleepines_scale)
+        cmap = create_cmap(self.data.sleepines_scale)
         sleepiness_color = [pg.mkBrush(color) for color in cmap]
-        self.plot.plot(
-                self.t, info_to_plot, symbol='o', symbolSize=8,
+        self.pw.plot(
+                self.data.t, info_to_plot, symbol='o', symbolSize=8,
                 symbolBrush=sleepiness_color, label='Time wake up',
                 pen=pen_color)
 
     def plot_w_or_wo_alarm(self):
-        r = (255, 0, 0, 20)
+        r = (255, 0, 0, 20)  # Put these color in a COLOR file (And,, create namedtuple instead ?)
         g = (0, 255, 0, 20)
         y = (229, 223, 0, 50)
         k = (0, 0, 0, 10)
         color = [g, y, r, k]
-        self.w_or_wo_alarm[self.w_or_wo_alarm == -1] = 3
-        for i, val in enumerate(self.w_or_wo_alarm):
+        self.data.w_or_wo_alarm[self.data.w_or_wo_alarm == -1] = 3
+        for i, val in enumerate(self.data.w_or_wo_alarm):
             pen = pg.mkPen(color[int(val)], width=6)
             v_line = pg.InfiniteLine(i, pen=pen)
-            self.plot.addItem(v_line)
+            self.pw.addItem(v_line)
 
-    def print_sleep_info(self):
-        # print('last 7 days work', self.working_hours[-8:-1])
-        print('last week: ', np.sum(self.working_hours[-8:-1]))
-        # Average time wake up
-        median_time_wake_up = np.median(self.time_wake_up)
-        print('Median time wake up: ', median_time_wake_up)
-        # plt.axhline(median_time_wake_up, c='blue')
-        # Average time spent sleeping
-        non_zero_time_sleep = self.time_sleep[np.nonzero(self.time_sleep)]
-        avg_time_sleep = np.average(non_zero_time_sleep[-40:])
-        print('sleep last 40 days', non_zero_time_sleep[-40:])
-        print('Average sleeping time (over the last 40 days): ', avg_time_sleep)
-        print('n days', len(non_zero_time_sleep))
-        plt.axhline(avg_time_sleep, c='orange')
