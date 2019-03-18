@@ -1,12 +1,10 @@
 # GUI
 from PyQt5.QtWidgets import *
 import pyqtgraph as pg
-from datetime import datetime as dt
 # -- My Packages --
 from general_function.inner_dock import InnerDock
 from pyqtgraph.dockarea import DockArea
 from app.pyqt_frequently_used import create_new_data_txt_box
-from date_axis import DateAxis
 from plot_manager import PlotManager
 
 
@@ -50,15 +48,28 @@ class SleepAndWorkTab(QWidget):
         return dock_area
 
     def add_txt_box_to_layout(self):
+        self.all_line_edit : [QLineEdit] = []
         # create a Inner dock for the adding of new information for the day
         settings_d = InnerDock(
                 self.layout, 'add info', b_pos=(0, 0), toggle_button=True,
                 size=(1, 1))
 
         for i, category in enumerate(self.tracked_categories):
-            create_new_data_txt_box(settings_d.layout, category, pos=(i*2, 0))  # TODO: ALEXM Mettre le survey a la place de le faire moi meme?
+            self.all_line_edit.append(
+                    create_new_data_txt_box(
+                            settings_d.layout, category, pos=(i*2, 0)))  # TODO: ALEXM Mettre le survey a la place de le faire moi meme?
 
         add_info_b = QPushButton('add info to csv')
+        add_info_b.clicked.connect(self.save_new_info_to_file)
         settings_d.layout.addWidget(add_info_b, 12, 0)
 
         self.dock_area.addDock(settings_d.dock, position='left')
+
+    def save_new_info_to_file(self):
+        new_info = []
+        for le in self.all_line_edit:
+            new_info.append(le)
+            print(le)
+
+
+

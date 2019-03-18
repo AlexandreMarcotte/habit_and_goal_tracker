@@ -2,11 +2,13 @@ import pyqtgraph as pg
 from general_function.create_cmap import create_cmap
 from data import Data
 from COLOR import *
+from datetime import datetime as dt
+from date_axis import DateAxis
 
 
 class PlotManager:
     def __init__(self):
-        # date_axis = DateAxis(orientation='bottom')
+        date_axis = DateAxis(orientation='bottom')
         # vb = pg.ViewBox()
         # p = pg.PlotWidget(
         #         viewBox=vb, axisItems={'bottom': date_axis},
@@ -18,6 +20,13 @@ class PlotManager:
         self.pw.showGrid(x=True, y=True, alpha=0.5)
         self.pw.setYRange(4, 14)
 
+        self.add_sliding_region()
+
+    def add_sliding_region(self):
+        sliding_region = pg.LinearRegionItem([120, 130])
+        sliding_region.setBrush((0, 255, 0, 5))
+        self.pw.addItem(sliding_region)
+
     def plot_n_sleep_hours(self):
         # Plot
         self.plot_info(self.data.time_wake_up, pen_color='b')
@@ -26,7 +35,8 @@ class PlotManager:
 
     def plot_n_working_h(self):
         self.pw.plot(
-            x=self.data.t, y=self.data.working_hours, label='Working hours', pen='g')
+            x=self.data.t, y=self.data.working_hours, label='Working hours',
+            pen='g')
         # dates = [dt(2018, 1, 5), dt(2018, 3, 6)]  # Date is given by the number of second after 1970
         # y = [1, 6]
         # self.pw.plot(x=dates, y=y)

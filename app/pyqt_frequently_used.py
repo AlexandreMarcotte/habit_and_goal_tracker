@@ -8,7 +8,9 @@ def create_new_data_txt_box(layout, name, pos):
         l = create_txt_label(name)
         layout.addWidget(l, *pos)
     le = QLineEdit('')
+    # le.textChanged.connect(print_shit)
     layout.addWidget(le, pos[0]+1, 0, 1, 1)
+    return le
 
 
 def create_txt_label(name):
@@ -17,9 +19,10 @@ def create_txt_label(name):
     l.setFrameShadow(QFrame.Sunken)
     l.setLineWidth(1)
     l.setAlignment(Qt.AlignCenter)
-    l.setStyleSheet(f"""font-weight: 420; 
-                        background-color: {label_grey}; 
-                        font-size: 10pt;""")
+    l.setStyleSheet(
+            f"""font-weight: 420; 
+                background-color: {label_grey}; 
+                font-size: 10pt;""")
     l.setMaximumHeight(26)
     return l
 

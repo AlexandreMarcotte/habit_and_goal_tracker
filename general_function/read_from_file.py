@@ -41,3 +41,12 @@ def read_from_file_and_add_date_to_new_file(file_name):
         writer = csv.writer(f)
         writer.writerows(data_with_date)
     return sleep_data
+
+
+def save_to_file(data, file_name):
+    with open(file_name, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+
+
+
