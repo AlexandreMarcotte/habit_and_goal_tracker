@@ -41,6 +41,11 @@ class PlotManager:
         # y = [1, 6]
         # self.pw.plot(x=dates, y=y)
 
+    def plot_gym_sessions(self):
+        self.pw.plot(
+            self.data.t, self.data.gym_or_not*4, symbol='o', symbolSize=8,
+            label='Gym or not', pen='k')
+
     def plot_info(self, info_to_plot, pen_color):
         cmap = create_cmap(self.data.sleepines_scale)
         sleepiness_color = [pg.mkBrush(color) for color in cmap]

@@ -16,6 +16,7 @@ class Data:
         self.w_or_wo_alarm = sleep_data[:, 2]
         self.working_hours = sleep_data[:, 3]
         self.sleepines_scale = sleep_data[:, 4] + 6
+        self.gym_or_not = sleep_data[:, 5]
         self.time_go_to_bed = self.time_wake_up - self.time_sleep
 
     def print_data(self):
@@ -27,8 +28,8 @@ class Data:
         # plt.axhline(median_time_wake_up, c='blue')
         # Average time spent sleeping
         non_zero_time_sleep = self.time_sleep[np.nonzero(self.time_sleep)]
-        avg_time_sleep = np.average(non_zero_time_sleep[-40:])
-        print('sleep last 40 days', non_zero_time_sleep[-40:])
-        print('Average sleeping time (over the last 40 days): ', avg_time_sleep)
+        avg_time_sleep = np.average(non_zero_time_sleep[-7:])
+        print('sleep last 40 days', non_zero_time_sleep[-7:])
+        print('Average sleeping time (over the last two week): ', avg_time_sleep)
         print('n days', len(non_zero_time_sleep))
         # plt.axhline(avg_time_sleep, c='orange')

@@ -23,6 +23,7 @@ class SleepAndWorkTab(QWidget):
         self.plot_manager = PlotManager()
         self.plot_manager.plot_n_sleep_hours()
         self.plot_manager.plot_n_working_h()
+        self.plot_manager.plot_gym_sessions()
 
         plot_dock = InnerDock(
             self.layout, 'show plot', b_pos=(0, 1), toggle_button=True)
