@@ -31,9 +31,19 @@ class PlotManager:
         # Plot
         self.plot_info(self.data.time_wake_up, pen_color='b')
         self.plot_info(self.data.time_sleep, pen_color=(255, 165, 0))
+        self.plot_info(self.data.time_go_to_bed, pen_color='r')
         self.plot_w_or_wo_alarm()
 
+    def plot_mv_avg(self):
+        # moving average of sleepiness scale
+        self.pw.plot(x=self.data.t, y=self.data.sleepines_scale_mv_avg,
+            label='sleepiness scale moving average', pen=(0, 0, 200))
+        # Moving average of time sleep
+        self.pw.plot(x=self.data.t, y=self.data.time_sleep_mv_avg,
+            label='time sleep moving average', pen=(220, 50, 255))
+
     def plot_n_working_h(self):
+        # working hour data
         self.pw.plot(
             x=self.data.t, y=self.data.working_hours, label='Working hours',
             pen='g')
